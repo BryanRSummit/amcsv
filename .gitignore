@@ -1,2 +1,5 @@
-__pychache__/
+__pychache__
 *.json
+*.csv
+*.pickle
+env/
