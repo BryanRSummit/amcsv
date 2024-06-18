@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     # ------------------------------------- Pickle file handling -------------------------
     # Path to the pickle file
-    pickle_file = 'agents.pickle'
+    pickle_file = 'agents2.pickle'
     # Check if the file exists
     if os.path.isfile(pickle_file):
         print(f"The file '{pickle_file}' already exists.")

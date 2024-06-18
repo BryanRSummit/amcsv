@@ -31,16 +31,50 @@ class Account:
     accountManagers: str
     contacted: bool
 
+
+
 def eligible_contact(act):
     if act.subject == "Call" or act.subject == "Prospecting":
         return True
     return False
-    
-def had_activity(sf, account):
+
+def get_opp_activity(sf, opId):
+    contacted = False
     # Create a datetime object for October 1st, 2023
     cutoff = datetime(2023, 10, 1)
+
+    oppActivityQuery = f"""
+                SELECT
+                    Id, 
+                    Subject,
+                    Description, 
+                    WhatId, 
+                    ActivityDate
+                FROM Task
+                WHERE WhatId = '{opId}'
+    """
+    opp_activity_records = sf.query_all(oppActivityQuery)['records']
+
+    for op in opp_activity_records:
+        act_date = parser.parse(op["ActivityDate"])
+        if act_date > cutoff:
+            contacted = True
+            break
+        
+    return contacted
+
+
+
+    
+# Because people can put calls on accounts OR on Opportunities we have to query all 
+# kinds of stuff here, hopefully it doesn't slow things down too much
+def had_activity(sf, account):
     contacted = False
-    activityQuery = f"""
+    # Create a datetime object for October 1st, 2023
+    cutoff = datetime(2023, 10, 1)
+
+    # get any activity on the account
+    accountActivityQuery = f"""
                 SELECT 
                     What.Name,
                     What.Id,
@@ -50,15 +84,42 @@ def had_activity(sf, account):
                     Description,
                     ActivityDate
                 FROM Task 
-                WHERE WhatId IN ('{account.id}') OR What.Name ILIKE {account.name}
+                WHERE WhatId IN ('{account.id}')
           """
-    account_records = sf.query_all(activityQuery)['records']
+    
+    #get 2024 opportunity for this account to check for activity
+    oppQuery = f"""
+                SELECT
+                    Id, 
+                    Name, 
+                    StageName, 
+                    CloseDate, 
+                    Amount
+                FROM Opportunity
+                WHERE AccountId = '{account.id}' AND Name LIKE '%2024%' 
+          """
+    
 
-    for rec in account_records:
+    account_activity_records = sf.query_all(accountActivityQuery)['records']
+    opp_records = sf.query_all(oppQuery)['records']
+
+
+    # check activity on accounts 
+    for rec in account_activity_records:
         act_date = parser.parse(rec["ActivityDate"])
         if act_date > cutoff:
             contacted = True
             account.contacted = True
+
+    #don't do this part if we already found activity on account
+    if contacted == False:
+        #check if opportunity has recent activity
+        for op in opp_records:
+            contacted = get_opp_activity(sf, op["Id"])
+            if contacted == True:
+                break
+
+        
     return contacted
 
 
