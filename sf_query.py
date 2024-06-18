@@ -50,7 +50,7 @@ def had_activity(sf, account):
                     Description,
                     ActivityDate
                 FROM Task 
-                WHERE WhatId IN ('{account.id}')
+                WHERE WhatId IN ('{account.id}') OR What.Name ILIKE {account.name}
           """
     account_records = sf.query_all(activityQuery)['records']
 
