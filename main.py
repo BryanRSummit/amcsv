@@ -2,18 +2,43 @@ from simple_salesforce import Salesforce
 import os
 import json
 import pickle
+import hashlib
 import csv
 import time
 from dateutil import parser
-from datetime import datetime, timedelta
+from cryptography.fernet import Fernet
 from sf_query import is_untouched
 
-def sf_login():
-    with open(r"C:\Users\Bryan Edman\Documents\AMUncontacted\sf_creds.json") as f:
-        sf_creds = json.load(f)
-        sf = Salesforce(username=sf_creds["username"], password=sf_creds["password"], security_token=sf_creds["security_token"])
-        return sf
 
+def verify_password(stored_password, provided_password, salt):
+    hash_obj = hashlib.sha256()
+    hash_obj.update(bytes.fromhex(salt) + provided_password.encode('utf-8'))
+    return stored_password == hash_obj.digest().hex()
+
+
+def sf_login():
+    cwd = os.getcwd()
+    cred_path = os.path.join(cwd, "encrypted_credentials.json")
+    key_path = os.path.join(cwd, "key.key")
+
+    # Load the key
+    with open(key_path, 'rb') as key_file:
+        key = key_file.read()
+
+    cipher_suite = Fernet(key)
+
+    # Load credentials from JSON file
+    with open(cred_path, 'r') as f:
+        creds = json.load(f)
+
+    # Decrypt the password and token
+    encrypted_password = creds['encrypted_password'].encode('utf-8')
+    encrypted_sec_token = creds["encrypted_sec_token"].encode('utf-8')
+    decrypted_password = cipher_suite.decrypt(encrypted_password).decode('utf-8')
+    decrypted_sec_token = cipher_suite.decrypt(encrypted_sec_token).decode('utf-8')
+
+    sf = Salesforce(username=creds["username"], password=decrypted_password, security_token=decrypted_sec_token)
+    return sf
 
 
 

@@ -3,8 +3,8 @@ from cx_Freeze import setup, Executable
 # Define the base options for the setup
 options = {
     "build_exe": {
-        "include_files": ["sf_creds.json", "sf_query.py"],
-        "packages": ["os", "sys", "json", "pickle", "dateutil"],  # Add the package names here
+        "include_files": ["encrypted_credentials.json", "key.key", "sf_query.py"],
+        "packages": ["os", "sys", "json", "pickle", "dateutil", "cryptography"],  # Add the package names here
         "includes": ["csv", "ctypes", "re", "time"],  # List any additional modules you want to include
     }
 }
