@@ -18,11 +18,7 @@ def sf_login():
 
 
 if __name__ == "__main__":
-    start_time = time.time()
     sf = sf_login()
-
-
-
 
     create = ""
     dirName = input("Name a Directory to save the CSV files to. ")
@@ -52,6 +48,7 @@ if __name__ == "__main__":
         pickle_file = tempPickleFile
     # ------------------------------------- Pickle file handling -------------------------
 
+    start_time = time.time()
 
     # Check if the file exists
     if os.path.isfile(pickle_file):
@@ -97,4 +94,6 @@ if __name__ == "__main__":
                 writer.writerow(account_dict)
     end_time = time.time()
     total_time = end_time - start_time
-    print(f"CSV files created successfully. Process took {total_time}")
+    print(f"CSV files created successfully. Process took {total_time} seconds")
+
+    end = input("\nThank you for using this tool!\nCreated by Bryan Edman\n2024\n\nPress Enter to close. . . ")
