@@ -3,6 +3,7 @@ import os
 import json
 import pickle
 import csv
+import time
 from sf_query import is_untouched
 
 def sf_login():
@@ -15,6 +16,7 @@ def sf_login():
 
 
 if __name__ == "__main__":
+    start_time = time.time()
     sf = sf_login()
 
     # ------------------------------------- Pickle file handling -------------------------
@@ -29,11 +31,11 @@ if __name__ == "__main__":
     else:
         print(f"The file '{pickle_file}' does not exist.")
         # Create your dictionary here
-        untouched_by_agent = is_untouched(sf)
+        agent_dict = is_untouched(sf)
 
         # Save the dictionary to the file
         with open(pickle_file, 'wb') as file:
-            pickle.dump(untouched_by_agent, file, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump(agent_dict, file, protocol=pickle.HIGHEST_PROTOCOL)
     # ------------------------------------- Pickle file handling -------------------------
 
 
@@ -57,5 +59,6 @@ if __name__ == "__main__":
                     "Map Created": account.mapCreated,
                 }
                 writer.writerow(account_dict)
-
-    print("CSV files created successfully.")
+    end_time = time.time()
+    total_time = end_time - start_time
+    print(f"CSV files created successfully. Process took {total_time}")
