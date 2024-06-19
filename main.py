@@ -4,6 +4,8 @@ import json
 import pickle
 import csv
 import time
+from dateutil import parser
+from datetime import datetime, timedelta
 from sf_query import is_untouched
 
 def sf_login():
@@ -18,20 +20,36 @@ def sf_login():
 if __name__ == "__main__":
     start_time = time.time()
     sf = sf_login()
+    default_cutoff = "10/1/2023"
 
+    dirName = input("Name a Directory to save the CSV files to. ")
+    create = input("Would you like to run with the data from the last run or create a new query?\nType create for new enter otherwise. ")
+
+    if create == "create":
+
+        cutoffDate = input("Enter the cut off date for last activity in the form m/d/yyyy ")
+        cut_off_date = parser.parse(cutoffDate)
+        # create mew pickle file with meaningful name
+        pickle_file = f'{dirName}_{cutoffDate}.pickle'
+    else:
+        tempPickleFile = ""
+        while not os.path.isfile(tempPickleFile):
+            tempPickleFile = input("Choose the pickle file you would like to use. ")
+
+        pickle_file = tempPickleFile
     # ------------------------------------- Pickle file handling -------------------------
-    # Path to the pickle file
-    pickle_file = 'agents.pickle'
+
+
     # Check if the file exists
     if os.path.isfile(pickle_file):
-        print(f"The file '{pickle_file}' already exists.")
+        print(f"The file '{pickle_file}' exists. Using it for data. . . ")
         # Load the dictionary from the file
         with open(pickle_file, 'rb') as file:
             agent_dict = pickle.load(file)
     else:
-        print(f"The file '{pickle_file}' does not exist.")
+        print(f"Creating '{pickle_file}'. Executing Query with cut off date of {cut_off_date}.\nRunning. . . ")
         # Create your dictionary here
-        agent_dict = is_untouched(sf)
+        agent_dict = is_untouched(sf, cut_off_date)
 
         # Save the dictionary to the file
         with open(pickle_file, 'wb') as file:
@@ -39,12 +57,17 @@ if __name__ == "__main__":
     # ------------------------------------- Pickle file handling -------------------------
 
 
+    # Create the directory for the CSV files
+    os.makedirs(dirName, exist_ok=True)
+
     column_names = ["Account Name", "Account Link", "Account Type", "Map Created", "Account Managers"]
     # Loop through each agent in the dictionary
     for agent, accounts in agent_dict.items():
         # Create a CSV file for the agent
         csv_filename = f"{agent}_uncontacted.csv"
-        with open(csv_filename, "w", newline="") as csvfile:
+        csv_file_path = os.path.join(dirName, csv_filename)
+
+        with open(csv_file_path, "w", newline="") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=column_names)
             
             # Write the column names as the header

@@ -38,10 +38,10 @@ def eligible_contact(act):
         return True
     return False
 
-def get_opp_activity(sf, opId):
+def get_opp_activity(sf, opId, cutOff):
     contacted = False
     # Create a datetime object for October 1st, 2023
-    cutoff = datetime(2023, 10, 1)
+    #cutoff = datetime(2023, 9, 1)
 
     oppActivityQuery = f"""
                 SELECT
@@ -57,7 +57,7 @@ def get_opp_activity(sf, opId):
 
     for op in opp_activity_records:
         act_date = parser.parse(op["ActivityDate"])
-        if act_date > cutoff:
+        if act_date > cutOff:
             contacted = True
             break
         
@@ -68,10 +68,10 @@ def get_opp_activity(sf, opId):
     
 # Because people can put calls on accounts OR on Opportunities we have to query all 
 # kinds of stuff here, hopefully it doesn't slow things down too much
-def had_activity(sf, account):
+def had_activity(sf, account, cutOff):
     contacted = False
     # Create a datetime object for October 1st, 2023
-    cutoff = datetime(2023, 10, 1)
+    #cutoff = datetime(2023, 9, 1)
 
     # get any activity on the account
     accountActivityQuery = f"""
@@ -107,7 +107,7 @@ def had_activity(sf, account):
     # check activity on accounts 
     for rec in account_activity_records:
         act_date = parser.parse(rec["ActivityDate"])
-        if act_date > cutoff:
+        if act_date > cutOff:
             contacted = True
             account.contacted = True
 
@@ -115,7 +115,7 @@ def had_activity(sf, account):
     if contacted == False:
         #check if opportunity has recent activity
         for op in opp_records:
-            contacted = get_opp_activity(sf, op["Id"])
+            contacted = get_opp_activity(sf, op["Id"], cutOff)
             if contacted == True:
                 break
 
@@ -124,8 +124,8 @@ def had_activity(sf, account):
 
 
 
-def is_untouched(sf):
-    # # Describe the Account object to get its fields
+def is_untouched(sf, cutOff):
+    # # Used to see Object fields
     # account_metadata = sf.Account.describe()
     # # Extract field names
     # field_names = [field['name'] for field in account_metadata['fields']]
@@ -152,11 +152,11 @@ def is_untouched(sf):
     for a in account_records:
         account = Account(a["Id"], a["Name"], a["Agent__c"], a["Agent_Name__c"], a["Converted__c"], a["Account_Type__c"], a["Map_Created__c"], a["Account_Managers__c"], False)
         if account.agentName not in accounts_list:
-            if not had_activity(sf, account):
+            if not had_activity(sf, account, cutOff):
                 accounts_list[account.agentName] = []
                 accounts_list[account.agentName].append(account)
         else:
-            if not had_activity(sf, account):
+            if not had_activity(sf, account, cutOff):
                 accounts_list[account.agentName].append(account)
 
 
