@@ -20,14 +20,27 @@ def sf_login():
 if __name__ == "__main__":
     start_time = time.time()
     sf = sf_login()
-    default_cutoff = "10/1/2023"
 
+
+
+
+    create = ""
     dirName = input("Name a Directory to save the CSV files to. ")
-    create = input("Would you like to run with the data from the last run or create a new query?\nType create for new enter otherwise. ")
+
+    # Get the current working directory
+    cwd = os.getcwd()
+    # Check if there are any .pickle files in the current directory
+    pickle_files = [f for f in os.listdir(cwd) if f.endswith(".pickle")]
+    if not pickle_files:
+        create = "create"
+    else:
+        create = input("Would you like to run with the data from another run or create a new query?\nType create for new enter otherwise. ")
+ 
+    
 
     if create == "create":
 
-        cutoffDate = input("Enter the cut off date for last activity in the form m/d/yyyy ")
+        cutoffDate = input("Enter the cut off date for last activity in the form m-d-yyyy ")
         cut_off_date = parser.parse(cutoffDate)
         # create mew pickle file with meaningful name
         pickle_file = f'{dirName}_{cutoffDate}.pickle'
@@ -47,7 +60,7 @@ if __name__ == "__main__":
         with open(pickle_file, 'rb') as file:
             agent_dict = pickle.load(file)
     else:
-        print(f"Creating '{pickle_file}'. Executing Query with cut off date of {cut_off_date}.\nRunning. . . ")
+        print(f"Creating '{pickle_file}'. Executing Query with cut off date of {cutoffDate}.\nRunning. . . ")
         # Create your dictionary here
         agent_dict = is_untouched(sf, cut_off_date)
 
