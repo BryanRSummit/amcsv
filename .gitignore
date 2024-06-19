@@ -1,5 +1,8 @@
-__pychache__
+__pycache__/
+build/
 *.json
 *.csv
 *.pickle
+*.exe
+*.nsi
 env/
