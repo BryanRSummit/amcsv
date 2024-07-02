@@ -56,8 +56,6 @@ if __name__ == "__main__":
         create = "create"
     else:
         create = input("Would you like to run with the data from another run or create a new query?\nType create for new enter otherwise. ")
- 
-    
 
     if create == "create":
 
@@ -69,7 +67,6 @@ if __name__ == "__main__":
         tempPickleFile = ""
         while not os.path.isfile(tempPickleFile):
             tempPickleFile = input("Choose the pickle file you would like to use. ")
-
         pickle_file = tempPickleFile
     # ------------------------------------- Pickle file handling -------------------------
 
@@ -83,7 +80,6 @@ if __name__ == "__main__":
             agent_dict = pickle.load(file)
     else:
         print(f"Creating '{pickle_file}'. Executing Query with cut off date of {cutoffDate}.\nRunning. . . ")
-        # Create your dictionary here
         agent_dict = is_untouched(sf, cut_off_date)
 
         # Save the dictionary to the file
@@ -91,32 +87,27 @@ if __name__ == "__main__":
             pickle.dump(agent_dict, file, protocol=pickle.HIGHEST_PROTOCOL)
     # ------------------------------------- Pickle file handling -------------------------
 
-
-    # Create the directory for the CSV files
     os.makedirs(dirName, exist_ok=True)
 
-    column_names = ["Account Name", "Account Link", "Account Type", "Map Created", "Account Managers"]
-    # Loop through each agent in the dictionary
+    column_names = ["Account Id", "Account Name", "Account Type", "Account Link"]
+
     for agent, accounts in agent_dict.items():
-        # Create a CSV file for the agent
         csv_filename = f"{agent}_uncontacted.csv"
         csv_file_path = os.path.join(dirName, csv_filename)
 
         with open(csv_file_path, "w", newline="") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=column_names)
-            
-            # Write the column names as the header
             writer.writeheader()
-            
-            # Write each account as a row in the CSV file
+
             for account in accounts:
                 account_dict = {
+                    "Account Id": account.id,
                     "Account Name": account.name,
-                    "Account Link": f"https://reddsummit.lightning.force.com/lightning/r/Account/{account.id}/view",
                     "Account Type": account.account_type,
-                    "Map Created": account.mapCreated,
+                    "Account Link": f"https://reddsummit.lightning.force.com/lightning/r/Account/{account.id}/view",
                 }
                 writer.writerow(account_dict)
+
     end_time = time.time()
     total_time = end_time - start_time
     print(f"CSV files created successfully. Process took {total_time} seconds")
