@@ -63,6 +63,31 @@ def get_opp_activity(sf, opId, cutOff):
         
     return contacted
 
+def get_contact_activity(sf, contactId, cutOff):
+    contacted = False
+    # Create a datetime object for October 1st, 2023
+    #cutoff = datetime(2023, 9, 1)
+
+    oppActivityQuery = f"""
+                SELECT
+                    Id, 
+                    Subject,
+                    Description, 
+                    WhatId, 
+                    ActivityDate
+                FROM Task
+                WHERE WhatId = '{contactId}'
+    """
+    opp_activity_records = sf.query_all(oppActivityQuery)['records']
+
+    for op in opp_activity_records:
+        act_date = parser.parse(op["ActivityDate"])
+        if act_date > cutOff:
+            contacted = True
+            break
+        
+    return contacted
+
 
 
     
@@ -98,10 +123,21 @@ def had_activity(sf, account, cutOff):
                 FROM Opportunity
                 WHERE AccountId = '{account.id}' AND Name LIKE '%2024%' 
           """
+    #get contacts on the account
+    contactQuery = f"""
+                SELECT 
+                    Id, 
+                    AccountId,
+                    Name,
+                    OwnerId
+                FROM Contact
+                WHERE AccountId = '{account.id}'
+            """
     
 
     account_activity_records = sf.query_all(accountActivityQuery)['records']
     opp_records = sf.query_all(oppQuery)['records']
+    contact_records = sf.query_all(contactQuery)['records']
 
 
     # check activity on accounts 
@@ -119,16 +155,24 @@ def had_activity(sf, account, cutOff):
             if contacted == True:
                 break
 
+    #don't do this part if we already found activity on account
+    if contacted == False:
+        #check if opportunity has recent activity
+        for contact in contact_records:
+            contacted = get_contact_activity(sf, contact["Id"], cutOff)
+            if contacted == True:
+                break
+
         
     return contacted
 
 
 
 def is_untouched(sf, cutOff):
-    # # Used to see Object fields
-    # account_metadata = sf.Account.describe()
-    # # Extract field names
-    # field_names = [field['name'] for field in account_metadata['fields']]
+    # Used to see Object fields
+    account_metadata = sf.Contact.describe()
+    # Extract field names
+    field_names = [field['name'] for field in account_metadata['fields']]
 
     accountQuery = f"""
             SELECT 
